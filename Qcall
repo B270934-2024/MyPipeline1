@@ -1,0 +1,20 @@
+echo -e "\nPlease type the path to the FASTA files\nThis will initially assess the quality of the files.\n"
+read path
+cd $path
+touch results.tsv
+FileList=($(ls Tco-106_1.fq.gz))
+for Files in ${FileList[@]}; do
+        echo Processing $Files
+        fastqc -o $path/Output $Files
+        FileJustName=$(echo "${Files}"|sed 's/\.fq\.gz$//')
+        echo ${FileJustName}
+        cd $path/Output
+        unzip -qq ${FileJustName}_fastqc.zip
+	cd ${FileJustName}_fastqc
+       # echo -e "\n$FileJustName sequence passes on all counts aside from:\n\n"
+	awk -v fjn=$FileJustName 'BEGIN {FS = "\t"; OFS = "\t";}
+        {if($1=="FAIL"){print fjn,$1,$2;}}' summary.txt >> $path/results.tsv
+        rm -r ${FileJustName}_fastqc 
+        cd $path
+done
+echo -e "\n\n\n All files now processed! View results.txt in your FASTA folder."
