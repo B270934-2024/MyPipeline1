@@ -2,7 +2,7 @@ echo -e "\nPlease type the path to the FASTA files\nThis will initially assess t
 read path
 cd $path
 touch results.tsv
-FileList=($(ls Tco-106_1.fq.gz))
+FileList=($(ls .fq.gz))
 for Files in ${FileList[@]}; do
         echo Processing $Files
         fastqc -o $path/Output $Files
