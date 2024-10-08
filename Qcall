@@ -4,13 +4,18 @@ cd $path
 touch results.tsv
 mkdir $path/Output
 FileList=($(ls *.fq.gz))
+##all files in the selected folder that end in fq.gz##
+
+
+
 for Files in ${FileList[@]}; do
         echo Processing $Files
-        fastqc -o $path/Output $Files
+                                ###let the user know we are looking at this one file first.
+        fastqc -o $path/Output $Files -q
         FileJustName=$(echo "${Files}"|sed 's/\.fq\.gz$//')
         echo ${FileJustName}
         cd $path/Output
-        unzip -qq ${FileJustName}_fastqc.zip
+        unzip -qqo ${FileJustName}_fastqc.zip
 	cd $path/Output/${FileJustName}_fastqc
 	awk -v fjn=$FileJustName 'BEGIN {FS = "\t"; OFS = "\t";}
         {if($1=="FAIL"){print fjn,$1,$2;}}' summary.txt >> $path/results.tsv
@@ -25,4 +30,5 @@ for Files in ${FileList[@]}; do
         cd $path
 done
 echo -e "\n\n\n All files now processed! View results.txt in your FASTA folder. For more details, the fastqc_data.txt file, or the fastqc_report.html file."
+
 
