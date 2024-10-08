@@ -1,0 +1,16 @@
+echo -e "\nPlease type the path to the FASTA files\nThis will align all paired files in the given directory.\n"
+read path
+echo -e"\nPlease type the path to the genome you wish to align the FASTA files to."
+read pathGenome
+cd $path
+rm -f Alignment.tsv
+touch Alignment.tsv
+mkdir $path/Output
+FileList=($(ls *_1.fq.gz))
+cd $pathGenome
+Genome=($(ls *.fasta.gz))
+cd $path
+for Files in ${FileList[@]}; do
+	CoreFileJustName=${echo "$(Files)"| sed 's/_1\.fq\.gz$//'}
+        bowtie2 -q  {{-1 $CoreFileJustNam}e_1.fq.gz -2 ${CoreFileJustName}_2.fq.gz} -S output.sam
+        
