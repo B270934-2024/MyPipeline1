@@ -12,9 +12,11 @@ FileList=($(ls *.fq.gz))
 ##all files in the selected folder that end in fq.gz##
 
 echo -e "\nAre these files paired or unpaired?\nType [u] or [p]\n"
-read $pairing
+read pairing
+#echo $pairing
 
-if [$pairing == "u"] then
+if [ $pairing == "u" ]
+then
 for Files in ${FileList[@]}; do
         echo Processing $Files
                                 ###let the user know we are looking at this one file first.
@@ -25,7 +27,7 @@ for Files in ${FileList[@]}; do
         unzip -qqo ${FileJustName}_fastqc.zip
 	cd $path/Output/${FileJustName}_fastqc
 	awk -v fjn=$FileJustName 'BEGIN {FS = "\t"; OFS = "\t";}
-        {if($1=="FAIL"){print fjn,$1,$2;}}' summary.txt >> $path/results.tsv
+        {if($1=="FAIL"){print fjn,$1,$2;}}' summary.txt >> $path/Output/results.tsv
         awk -v fjn=$FileJustName '
         {if($1==">>Basic"){print fjn,$1,$2,"\t",$3;}}
         {if($1=="Sequences" && $2=="flagged"){print fjn,$4,$5,"\t",$6}}
@@ -36,9 +38,10 @@ for Files in ${FileList[@]}; do
 	awk -v fjn=$FileJustName '{if($NF=="fail"){count++}; {if(count>=4){print "We recommend deletion of ",fjn,"as it has failed ",count," tests."}}' fastqc_data.txt
         touch flag
 	awk -v fjn=$FileJustName '{if($NF=="fail"){count++}; {if(count>=4){print "Del"}}' fastqc_data.txt > flag
-        if $[wc -l < flag >=1] then
+	if [ $(wc -l < flag) >=1 ] 
+	then
            	cd $path
-		rm -i $files
+		rm -i $Files
         fi
         cd $path/Output
 	rm -rf ${FileJustName}_fastqc 
@@ -46,8 +49,9 @@ for Files in ${FileList[@]}; do
         rm -f flag
      	cd $path
 done
-/localdisk/home/s2761220/MyFirstPipeline/fastq/Output/
-elseif [$pairing == "p"] then
+
+elif [ $pairing == "p" ]
+	then
 	FileList=($(ls *_1.fq.gz))
 
 	for Files in ${FileList[@]}; do
@@ -73,8 +77,9 @@ elseif [$pairing == "p"] then
         	awk -v fjn=$FileJustName '{if($NF=="fail"){count++}; {if(count>=4){print "We recommend deletion of ",fjn,"as it has failed ",count," tests."}}' fastqc_data.txt
         	touch flag
         	awk -v fjn=$FileJustName '{if($NF=="fail"){count++}; {if(count>=4){print "Del"}}' fastqc_data.txt > flag
-        	if [$(wc -l < flag) >=1 ] then
-                	cd $path
+        	if [ $(wc -l < flag) >=1 ]
+	       	then
+               		cd $path
                 	rm -i $files
         	fi
         	cd $path/Output
@@ -95,7 +100,8 @@ elseif [$pairing == "p"] then
         	awk -v fjn=$FileJustName '{if($NF=="fail"){count++}; {if(count>=4){print "We recommend deletion of ",fjn,"as it has failed ",count," tests."}}' fastqc_data.txt
         	touch flag
         	awk -v fjn=$FileJustName '{if($NF=="fail"){count++}; {if(count>=4){print "Del"}}' fastqc_data.txt > flag
-		if [$(wc -l < flag) >=1] then
+		if [ $(wc -l < flag) >=1 ]
+	       	then
                 	cd $path
                  	rm -i $files
         	fi
