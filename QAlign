@@ -1,16 +1,53 @@
+#!/bin/bash
 echo -e "\nPlease type the path to the FASTA files\nThis will align all paired files in the given directory.\n"
 read path
-echo -e"\nPlease type the path to the genome you wish to align the FASTA files to."
+echo -e "\nPlease type the path to the genome you wish to align the FASTA files to."
 read pathGenome
 cd $path
 rm -f Alignment.tsv
 touch Alignment.tsv
-mkdir $path/Output
+mkdir -p $path/Output
 FileList=($(ls *_1.fq.gz))
 cd $pathGenome
 Genome=($(ls *.fasta.gz))
-cd $path
+#rm processed
+#bowtie2-build $pathGenome/$Genome index
+cd $path/Output
+rm commaseparated
 for Files in ${FileList[@]}; do
-	CoreFileJustName=${echo "$(Files)"| sed 's/_1\.fq\.gz$//'}
-        bowtie2 -q  {{-1 $CoreFileJustNam}e_1.fq.gz -2 ${CoreFileJustName}_2.fq.gz} -S output.sam
-        
+	CoreFileJustName=$(echo "${Files}"| sed 's/_1\.fq\.gz$//')
+	echo $path/${CoreFileJustName}_1.fq.gz","${path}/${CoreFileJustName}_2.fq.gz >> commaseparated        
+done
+touch processed
+awk 'BEGIN{FS = ","}{print "-1 ",$1,"-2 "$2}' commaseparated > processed
+#rm -f output.sam
+x=0
+while read -r line; do
+	CoreFileJustName=$(echo "${line}"|awk '{print $2}'| sed 's/_1\.fq\.gz$//')
+	x=x+1
+	cd $path/Output
+	echo $line
+	bowtie2 -q -x $pathGenome/index ${line} -S ${CoreFileJustName}.sam
+	chmod 777 ${output}.sam
+	echo "processed file $CoreFileJustName..."
+done < processed
+cd $path/Output
+samlist=($(ls *.sam))
+for file in ${samlist[@]}; do
+	echo converting file to bam
+	output=$(echo "$file"| sed 's/\.sam$//')
+	samtools view -b -o ${output}.bam ${output}.sam
+	chmod 777 ${output}.sam
+	samtools sort -o ${output}.sorted.bam ${output}.bam
+done
+echo -e "BAM files created. Attempting to create some statistics now..."
+echo -e "Please specify your bed file location."
+read bedpath
+cd $bedpath
+bed=($(ls *.bed))
+cd $path/Output
+bamlist=($(ls *.sorted.bam))
+for file in ${bamlist[@]}; do
+	output=$(echo "$file"| sed 's/\.sorted.\bam$//')
+	bedtools intersect -a ${bedpath}/${bed[@]} -b ${path}/Ouput/$file > ${output}_finalOutput.txt
+done
