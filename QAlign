@@ -28,6 +28,7 @@ while read -r line; do
 	cd $path/Output
 	echo $line
 	bowtie2 -q -x $pathGenome/index ${line} -S ${CoreFileJustName}.sam
+	mv ${CoreFileJustName}.sam $path/Output
 	chmod 777 ${output}.sam
 	echo "processed file $CoreFileJustName..."
 done < processed
@@ -39,6 +40,7 @@ for file in ${samlist[@]}; do
 	samtools view -b -o ${output}.bam ${output}.sam
 	chmod 777 ${output}.sam
 	samtools sort -o ${output}.sorted.bam ${output}.bam
+	chmod 777 ${output}.sorted.bam
 done
 echo -e "BAM files created. Attempting to create some statistics now..."
 echo -e "Please specify your bed file location."
@@ -46,8 +48,9 @@ read bedpath
 cd $bedpath
 bed=($(ls *.bed))
 cd $path/Output
+ls *.sorted.bam
 bamlist=($(ls *.sorted.bam))
 for file in ${bamlist[@]}; do
 	output=$(echo "$file"| sed 's/\.sorted.\bam$//')
-	bedtools intersect -a ${bedpath}/${bed[@]} -b ${path}/Ouput/$file > ${output}_finalOutput.txt
+	bedtools intersect -a ${bedpath}/${bed[@]} -b ${path}/Output/$file > ${output}_finalOutput.txt
 done
