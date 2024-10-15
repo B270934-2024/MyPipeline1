@@ -1,0 +1,27 @@
+#!/bin/bash
+cd /localdisk/home/s2761220/MyFirstPipeline/fastq
+awk 'BEGIN{FS="\t";OFS="_"}{print $1,$2,$4,$5,"\t",$6,"\t",$7,"\t",$3}' Tco2.fqfiles > Tco2.sorted.fqfiles
+awk 'BEGIN{FS="_\t_";OFS="\t"}{print $1,$2,$3,$4}' Tco2.sorted.fqfiles > listoffiles.txt
+sort  listoffiles.txt > listoffiles.tsv
+
+echo -e "Please specify where your final output files are.\n"
+read outputpath
+cd ${outputpath}
+allbams=$(ls *.sorted.bam_finalOutputCountsCoverage.txt)
+for file in ${allbams[@]};do
+	chmod 777 ${file}
+	cd ${outputpath}
+	touch ${outputpath}/numbers_to_add.tmp
+	fileJustName=$(echo "${file}" | sed 's/\.sorted\.bam\_finalOutputCountsCoverage\.txt$//')
+	awk '{print $NF}' ${file} > ${outputpath}/numbers_to_add.tmp
+	fileNoDash=$(echo "${fileJustName}" | sed 's/-//')
+	echo -e $fileNoDash processing...
+	awk -v fjn=$fileNoDash 'BEGIN {FS="\t"} {if($1 == fjn) {print $3}}' /localdisk/home/s2761220/MyFirstPipeline/fastq/Tco2.fqfiles > numberofrepeats.tmp
+	numofrepeats=$(cat numberofrepeats.tmp)
+	#echo $numofrepeats
+	awk -v repeats="${numofrepeats}" '{print $1/repeats}' ${outputpath}/numbers_to_add.tmp >${outputpath}/${fileJustName}_means.txt
+	echo -e Chromosome\tStart\tEnd\tProteinCode\tDescription\tRawCounts\tMeanCounts > ${outputpath}/combined_${fileJustName}.txt
+	paste ${file} ${outputpath}/${fileJustName}_means.txt > ${outputpath}/combined_${fileJustName}.txt
+done
+echo -e All processed!
+rm -f *.tmp
