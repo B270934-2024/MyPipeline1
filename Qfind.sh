@@ -7,6 +7,7 @@ echo -e "Please specify where your description file is"
 read desc
 descfile=($(ls *.fqfiles))
 allbams=$(ls *.sorted.bam_finalOutputCountsCoverage.txt)
+#This runs through and finds appends the mean number based on the repeats to the end of the file.
 for file in ${allbams[@]};do
 	chmod 777 ${file}
 	cd ${outputpath}

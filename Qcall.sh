@@ -13,13 +13,13 @@ FileList=($(ls *.fq.gz))
 
 echo -e "\nAre these files paired or unpaired?\nType [u] or [p]\n"
 read pairing
-#echo $pairing
+
 
 if [ $pairing == "u" ]
 then
 for Files in ${FileList[@]}; do
         echo Processing $Files
-                                ###let the user know we are looking at this one file first.
+        ###let the user know we are looking at this one file first.
         fastqc -o $path/Output $Files -q
         FileJustName=$(echo "${Files}"|sed 's/\.fq\.gz$//')
         echo ${FileJustName}
@@ -52,7 +52,7 @@ for Files in ${FileList[@]}; do
         rm -rf flag
      	cd $path
 done
-
+##### Above, the files are all awked, to sort through the files and print whatever fails. Below, its the same.
 elif [ $pairing == "p" ]
 	then
 	FileList=($(ls *_1.fq.gz))
@@ -74,8 +74,9 @@ elif [ $pairing == "p" ]
 		awk -v fjn=$FileJustName 'BEGIN {FS = "\t"; OFS = "\t";}
         	{if($1==">>Basic"){print fjn,$1,$2,"\t",$3;}}
         	{if($1=="Sequences" && $2=="flagged"){print fjn,$4,$5,"\t",$6}}
-        	{if($1==">>Per"){print fjn,$1,$2,$3,$4,"\t",$5}}
-        	{if($1==">>Sequence"){print fjn,$1,$2,$3,$4,"\t",$5}}
+		{if($1==">>Per"){print fjn,$1,$2,$3,$4,"\t",$5}}
+		{if($1=="Total"){print fjn,$1,$2,"\t",$3}}
+		{if($1==">>Sequence"){print fjn,$1,$2,$3,$4,"\t",$5}}
         	{if($1==">>Overrepresented"){print fjn,$1,$2,"\t",$3}}' fastqc_data.txt >>${path}/Output/results.tsv
         	awk -v fjn=$FileJustName '{if($NF=="fail"){print "\n",fjn,"Fails a test! Check results.\n Test failed is:",$0}}' fastqc_data.txt
         	awk -v fjn=$FileJustName 'BEGIN{count=0}{if($NF=="fail"){count++}} {if(count>=4){print "We recommend deletion of ",fjn,"as it has failed ",count," tests."}}' fastqc_data.txt
@@ -94,7 +95,7 @@ elif [ $pairing == "p" ]
         	echo ${FileJustName}
         	cd ${path}/Output
         	cd ${path}/Output/${FileJustName}_2_fastqc
-        	awk -v fjn=$FileJustName 'BEGIN {FS = "\t"; OFS = "\t"} {if($1=="FAIL"){print fjn,$1,$2;}}' summary.txt >> $path/results.tsv
+        	awk -v fjn=$FileJustName 'BEGIN {FS = "\t"; OFS = "\tfastqc_data.txt "} {if($1=="FAIL"){print fjn,$1,$2;}}' summary.txt >> $path/results.tsv
 	        awk -v fjn=$FileJustName '
 	        {if($1==">>Basic"){print fjn,$1,$2,"\t",$3;}}
 	        {if($1=="Sequences" && $2=="flagged"){print fjn,$4,$5,"\t",$6}}
@@ -118,4 +119,4 @@ elif [ $pairing == "p" ]
         	cd $path
 done
 fi
-echo -e "\n\n\n All files now processed! View results.txt in your FASTA folder. For more details, the fastqc_data.txt file, or the fastqc_report.html file."
+echo -e "\n\n\nAll files now processed! View results.txt in your FASTA folder. For more details, the fastqc_data.txt file, or the fastqc_report.html file."
